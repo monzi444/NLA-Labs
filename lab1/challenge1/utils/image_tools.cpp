@@ -3,9 +3,9 @@
 #include <cstdlib>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "../stb_image.h"
+#include "../libs/stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../stb_image_write.h"
+#include "../libs/stb_image_write.h"
 
 using namespace Eigen;
 
@@ -41,7 +41,7 @@ int loadImage2Matrix(MatrixXd& red, MatrixXd& green, MatrixXd& blue, const std::
     return 0;
 }
 
-// Load greyscale image and applies a custom pixel transformer
+// Load greyscale image and optionally applies a custom pixel transformer
 int loadImage2Matrix(Eigen::MatrixXd& output,
                      const std::string& input_path,
                      std::function<void(Eigen::MatrixXd& output, unsigned char* image_data, int width, int height)> map =
