@@ -21,7 +21,11 @@ using Eigen::MatrixXd;
 int main()
 {
    MatrixXd A = MatrixXd::Random(100,100);
-   MatrixXd b = MatrixXd::Random(100,50);
+
+   // Each column represents a different right hand side
+   MatrixXd b = MatrixXd::Random(100,50); 
+
+   // Direct methods in this case are faster since we have to solve 50 systems with the same matrix and we can compute the factorization only once
    MatrixXd x = A.fullPivLu().solve(b);
    double relative_residual = (A*x - b).norm() / b.norm(); // norm() is L2 norm
    std::cout << "The relative residual is:\n" << relative_residual << std::endl;
@@ -81,10 +85,11 @@ int main(int argc, char** argv)
 {
        SparseMatrix<double> mat(10,10);       // define matrix
     // for (int i=0; i<10; i++) {
-    //     mat.coeffRef(i, i) = 1.0;          // or mat.insert(i, i) = 1.0;
+    //     mat.coeffRef(i, i) = 1.0;          
+    // or  mat.insert(i, i) = 1.0; <- only works on empty matrices but faster!
     // }
 
-    // Alternative way to fill the matrix
+    // Alternative way to fill the matrix, very efficient
     std::vector<T> tripletList;
     tripletList.reserve(10);
     for(int i=0; i<10; i++) {
@@ -95,8 +100,8 @@ int main(int argc, char** argv)
     VectorXd b = VectorXd::Constant(mat.rows(), 1); // define right-hand side
 
     // Solving 
-    SimplicialLDLT<Eigen::SparseMatrix<double> > solver(mat);   // factorization 
-    solver.compute(mat);
+    SimplicialLDLT<Eigen::SparseMatrix<double> > solver;   // Cholesky factorization 
+    solver.compute(mat); // Compute the factorization (or iteration matrix for it methods) 
     if(solver.info()!=Success) {                                // sanity check 
         cout << "cannot factorize the matrix" << endl;          
         return 0;
@@ -120,7 +125,7 @@ To export your matrices and right-hand-side vectors in the matrix-market format,
 #include <unsupported/Eigen/SparseExtra>
 ...
 Eigen::saveMarket(A, "filename.mtx");
-Eigen::saveMarketVector(B, "filename_b.mtx");
+Eigen::saveMarketVector(B, "filename_b.mtx"); // uses a different format !?
 ```
 
 To load a matrix in the matrix market format, follow the instructions below:

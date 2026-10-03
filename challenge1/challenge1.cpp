@@ -1,5 +1,6 @@
 #include <iostream>
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 #include <cstdlib>
 #include "utils/image_tools.h"
 
@@ -34,7 +35,7 @@ int main(int argc, char* argv[]) {
   };
   
   // Task 1, 2
-  result = loadImage2Matrix(noisy_image, input_path, randomize);
+  // result = loadImage2Matrix(noisy_image, input_path, randomize);
   result = loadImage2Matrix(original_image, input_path);
 
   if (result == 1){
@@ -42,11 +43,12 @@ int main(int argc, char* argv[]) {
   }
 
   // Task 2
+  /*
   result = greyMatrix2File(noisy_image, output_path);
   if (result == 1){
     return 1;
   }
-
+  */
   
   // Task 3
   VectorXd vector_original = VectorXd::Zero(original_image.rows() * original_image.cols());
@@ -58,8 +60,35 @@ int main(int argc, char* argv[]) {
     vector_noisy.segment(i* noisy_image.cols(), noisy_image.cols()) = noisy_image.row(i);
   }
 
-  std::cout << "size of vector: " << vector_original.size() << " n*m: " << original_image.rows() * original_image.cols() << std::endl;
-  std::cout << "euclidean norm of v: " << vector_original.norm() << std::endl;
+  //std::cout << "size of vector: " << vector_original.size() << " n*m: " << original_image.rows() * original_image.cols() << std::endl;
+  //std::cout << "euclidean norm of v: " << vector_original.norm() << std::endl;
   
-  return 0;
+  // Task 4
+  // matrix nn x nn
+  MatrixXd kernel = MatrixXd(3,3);
+  kernel << 1.0/12.0, 1.0/12.0, 1.0/12.0, 
+            1.0/12.0, 4.0/12.0, 1.0/12.0, 
+            1.0/12.0, 1.0/12.0, 1.0/12.0;
+
+  int n = original_image.rows();
+
+  SparseMatrix<double> h1(original_image.rows() * n, n * n);
+  for (int k = 0; k < vector_original.size(); ++k){
+    for(int i = 0; i < kernel.rows(); ++i){
+      for(int j = 0; j < kernel.cols(); ++j){
+        int original_matrix_row_index = k / n;
+        int original_matrix_col_index = k - original_matrix_row_index * n;
+        int row = (original_matrix_row_index - 1 + i)*n + (original_matrix_col_index - 1) + j;
+        if(row < original_matrix_row_index * n){
+          h1.insert(row, k) = kernel(i,j);
+        }
+      }
+    }
+  }
+
+  VectorXd vector_blurred = vector_original * h1;
+  MatrixXd matrix_blurred = Eigen::Map<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(vector_blurred.data(), n, n);
+
+  return greyMatrix2File(matrix_blurred, output_path);
+
 }
