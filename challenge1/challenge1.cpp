@@ -206,8 +206,59 @@ int main(int argc, char* argv[]) {
   if (result == 1){
     return 1;
   }
-  
+
+  // Task 11
+  std::cout<<"Creo il kernel3"<<std::endl;
+  MatrixXd kernel3 = MatrixXd(3,3);
+  kernel3 << -1,0,1,
+             -2,0,2,
+             -1,0,1;
+  SparseMatrix h3 = build(kernel3,n);
+  std::cout<<"Detection kernel salvato"<<std::endl;
+  VectorXd vector_detectioned = h3 * vector_original;
+  MatrixXd matrix_detectioned = Eigen::Map<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(vector_detectioned.data(), n, n);
+  matrix_detectioned = matrix_detectioned.cwiseMax(0.0).cwiseMin(255.0);
+  std::cout << "nonzero entries: " << h3.nonZeros() << std::endl;
+  norm = (SparseMatrix<double>(h3.transpose()) -h3).norm();
+  if( norm == 0.0){
+    std::cout << "h3 is symetric! norm of symetric part: " << norm << std::endl;
+  }
+  else{
+    std::cout << "h3 is not symetric! norm of symetric part: " << norm << std::endl;
+  }
 
 
+  result = greyMatrix2File(matrix_detectioned,"resources/dectioned.png");
+  if(result==1){
+    return 1;
+  }
+
+  // Task 12
+  SparseMatrix<double> I (n*n,n*n);
+  I.setIdentity();
+  SparseMatrix<double> mat = 4 * I + h3;
+  double tol = 1.e-10;                  // tollerance
+  int maxit = 1000;                     // max iterations
+
+  //BiCGSTAB<SparseMatrix<double>, IncompleteLUT<double>> BiCG;
+  BiCGSTAB<SparseMatrix<double>> BiCG;
+
+  BiCG.setMaxIterations(maxit);
+  BiCG.setTolerance(tol);
+  BiCG.compute(mat); 
+
+  solution = BiCG.solve(vector_noisy);
+
+  std::cout << "Eigen native BiCGSTAB" << std::endl; // Ho corretto "CG" in "BiCGSTAB"
+  std::cout << "# iterations:      " << BiCG.iterations() << std::endl;
+  std::cout << "relative residual: " << BiCG.error()      << std::endl;
+
+  MatrixXd matrix_solution = Eigen::Map<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(solution.data(), n, n);
+  matrix_solution = matrix_solution.cwiseMax(0.0).cwiseMin(255.0);
+
+  result = greyMatrix2File(matrix_solution,"resources/system_solution_2.png");
+  if(result==1){
+    return 1;
+  }
   return 0;
 }
