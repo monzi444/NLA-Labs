@@ -50,7 +50,7 @@ int loadImage2Matrix(Eigen::MatrixXd& output,
                            for (int i = 0; i < height; ++i) {
                                for (int j = 0; j < width; ++j) {
                                    int index = i * width + j; // Since forced to 1 channel, stride is width
-                                   double val = static_cast<double>(image_data[index]) / 255.0;
+                                   double val = static_cast<double>(image_data[index]);
                                    output(i, j) = val;
                                }
                            }
@@ -82,7 +82,7 @@ int greyMatrix2File(const MatrixXd& grey, const std::string& output_path){
     
     // Use Eigen's unaryExpr to map the greyscale values (0.0 to 1.0) to 0 to 255
     greyscale_image = grey.unaryExpr([](double val) -> unsigned char {
-        return static_cast<unsigned char>(val * 255.0);
+        return static_cast<unsigned char>(val);
     });
 
     // Save the greyscale image using stb_image_write

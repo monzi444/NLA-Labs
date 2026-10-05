@@ -94,8 +94,8 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < height; ++i) {
         for (int j = 0; j < width; ++j) {
             int index = i * width + j; // Since forced to 1 channel, stride is width
-            double val = static_cast<double>(image_data[index]) / 255.0;
-            float shift = ((rand()%101) -50) / 255.0;
+            double val = static_cast<double>(image_data[index]);
+            float shift = ((rand()%101) -50);
             output(i, j) = std::max(0.0, val - shift);
         }
     }
@@ -104,18 +104,18 @@ int main(int argc, char* argv[]) {
   // Task 1, 2
   result = loadImage2Matrix(noisy_image, input_path, randomize);
   result = loadImage2Matrix(original_image, input_path);
-
   if (result == 1){
     return 1;
   }
+  noisy_image = noisy_image.cwiseMax(0.0).cwiseMin(255.0);
 
   // Task 2
-  /*
-  result = greyMatrix2File(noisy_image, output_path);
+  
+  result = greyMatrix2File(noisy_image, "resources/noisy.png");
   if (result == 1){
     return 1;
   }
-  */
+  
   
   // Task 3
   VectorXd vector_original = VectorXd::Zero(original_image.rows() * original_image.cols());
@@ -142,22 +142,23 @@ int main(int argc, char* argv[]) {
   //std::cout << "nonzero entries: " << h1.nonZeros() << std::endl;
   VectorXd vector_blurred = h1 * vector_original;
   MatrixXd matrix_blurred = Eigen::Map<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(vector_blurred.data(), n, n);
-  /*
-  result = greyMatrix2File(matrix_blurred, output_path);
+  matrix_blurred = matrix_blurred.cwiseMax(0.0).cwiseMin(255.0);
+  
+  result = greyMatrix2File(matrix_blurred, "resources/blurred.png");
   if (result == 1){
     return 1;
   }
-  */
+
 
   // Task 5
   VectorXd vector_noisy_blurred = h1 * vector_noisy;
   MatrixXd matrix_noisy_blurred = Eigen::Map<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(vector_noisy_blurred.data(), n, n);
-  /*
-  result = greyMatrix2File(matrix_noisy_blurred, output_path);
+  matrix_noisy_blurred = matrix_noisy_blurred.cwiseMax(0.0).cwiseMin(255.0);
+  result = greyMatrix2File(matrix_noisy_blurred, "resources/noisy_blurred.png");
   if (result == 1){
     return 1;
   }
-  */
+  
 
   // Task 6, 7
   MatrixXd kernel2 = MatrixXd(3,3);
@@ -167,6 +168,7 @@ int main(int argc, char* argv[]) {
   SparseMatrix h2 = build(kernel2, n);
   VectorXd vector_sharpened = h2 * vector_original;
   MatrixXd matrix_sharpened = Eigen::Map<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(vector_sharpened.data(), n, n);
+  matrix_sharpened = matrix_sharpened.cwiseMax(0.0).cwiseMin(255.0);
   std::cout << "nonzero entries: " << h2.nonZeros() << std::endl;
   double norm = (SparseMatrix<double>(h2.transpose()) -h2).norm();
   if( norm == 0.0){
@@ -176,12 +178,12 @@ int main(int argc, char* argv[]) {
     // std::cout << "h2 is not symetric! norm of symetric part: " << norm << std::endl;
   }
 
-  /*
-  result = greyMatrix2File(matrix_sharpened, output_path);
+  
+  result = greyMatrix2File(matrix_sharpened, "resources/sharpened.png");
   if (result == 1){
     return 1;
   }
-  */
+  
 
   // Task 8
   saveMarket(h2, "resources/h2.mtx");
@@ -198,8 +200,9 @@ int main(int argc, char* argv[]) {
   // Task 10
   VectorXd solution = import_vector_market("sol.mtx");
   MatrixXd solution_matrix = Eigen::Map<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(vector_noisy_blurred.data(), n, n);
-   
-  result = greyMatrix2File(solution_matrix, output_path);
+  solution_matrix = solution_matrix.cwiseMax(0.0).cwiseMin(255.0);
+
+  result = greyMatrix2File(solution_matrix, "resources/system_solution.png");
   if (result == 1){
     return 1;
   }
