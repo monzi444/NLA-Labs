@@ -41,16 +41,15 @@ VectorXd import_vector_market(const std::string& input_path) {
     bool is_first_data_line = true;
 
     while (std::getline(input, row)) {
-        // Ignora i commenti standard di Matrix Market
+        // Ignore matrix market standard comments
         if (row.empty() || row[0] == '%') continue;
 
         std::istringstream iss(row);
         std::string first_col, second_col;
         
         if (iss >> first_col) {
-            // Se esiste una seconda colonna, estraiamo quella (logica originale)
             if (iss >> second_col) {
-                // Se è la primissima riga di dati, è l'header delle dimensioni (es: "M 1" o "M N nnz") -> la saltiamo
+                // Skip first line
                 if (is_first_data_line) {
                     is_first_data_line = false; 
                     continue;
@@ -59,7 +58,7 @@ VectorXd import_vector_market(const std::string& input_path) {
                     values.push_back(std::stod(second_col)); 
                 } catch(...) {}
             } else {
-                // Se c'è una sola colonna, estraiamo la prima (logica originale)
+                // If there is just one column
                 if (is_first_data_line) {
                     is_first_data_line = false; 
                     continue;
@@ -73,7 +72,6 @@ VectorXd import_vector_market(const std::string& input_path) {
     
     input.close();
 
-    // Map converte il std::vector nativo in un Eigen::VectorXd dinamicamente, senza passaggi su disco
     return Eigen::Map<VectorXd>(values.data(), values.size());
 }
 
@@ -283,7 +281,8 @@ int main(int argc, char* argv[]) {
   int maxit = 1000;                     // max iterations
 
   //BiCGSTAB<SparseMatrix<double>, IncompleteLUT<double>> BiCG;
-  BiCGSTAB<SparseMatrix<double>> BiCG;
+  BiCGSTAB<SparseMatrix<double>, DiagonalPreconditioner<double>> BiCG;
+  //BiCGSTAB<SparseMatrix<double>> BiCG;
 
   BiCG.setMaxIterations(maxit);
   BiCG.setTolerance(tol);
