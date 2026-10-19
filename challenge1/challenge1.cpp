@@ -9,7 +9,7 @@
 
 using namespace Eigen;
 
-SparseMatrix<double> build (MatrixXd& kernel, int n){
+SparseMatrix<double> build_convolution_matrix (MatrixXd& kernel, int n){
   SparseMatrix<double> h(n * n, n * n);
   for (int k = 0; k < n*n; ++k){
     int original_matrix_row_index = k / n;
@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
   
   int n = original_image.rows();
   
-  SparseMatrix h1 = build(kernel, n);
+  SparseMatrix h1 = build_convolution_matrix(kernel, n);
   std::cout << "nonzero entries: " << h1.nonZeros() << std::endl;
   VectorXd vector_blurred = h1 * vector_original;
   MatrixXd matrix_blurred = Eigen::Map<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(vector_blurred.data(), n, n);
@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
   kernel2 << 0.0, -3.0, 0.0,
             -1.0, 9.0, -3.0,
             0.0, -1.0, 0.0;
-  SparseMatrix h2 = build(kernel2, n);
+  SparseMatrix h2 = build_convolution_matrix(kernel2, n);
   VectorXd vector_sharpened = h2 * vector_original;
   MatrixXd matrix_sharpened = Eigen::Map<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(vector_sharpened.data(), n, n);
   matrix_sharpened = matrix_sharpened.cwiseMax(0.0).cwiseMin(255.0);
@@ -246,7 +246,7 @@ int main(int argc, char* argv[]) {
   kernel3 << -1,0,1,
              -2,0,2,
              -1,0,1;
-  SparseMatrix h3 = build(kernel3,n);
+  SparseMatrix h3 = build_convolution_matrix(kernel3,n);
   VectorXd vector_detectioned = h3 * vector_original;
   MatrixXd matrix_detectioned = Eigen::Map<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(vector_detectioned.data(), n, n);
   matrix_detectioned = matrix_detectioned.cwiseMax(0.0).cwiseMin(255.0);
