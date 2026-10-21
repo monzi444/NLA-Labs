@@ -36,7 +36,8 @@ int main(int argc, char* argv[]) {
     std::cout << "The two largest eigenvalues of AtA are: " << std::endl << eigenValues.tail(2) << std::endl;
 
 
-    // Task 3
+    // Task 3, 4
+    /*
     std::cout << "Task 3: " << std::endl;
     std::remove("resources/AtA.mtx");
     saveMarket(AtA, "resources/AtA.mtx");
@@ -50,11 +51,11 @@ int main(int argc, char* argv[]) {
         std::cerr << "Error: LIS solver failed with exit code " << sys_res << std::endl;
         return 1;
     }
-    
+    */
 
     // Task 4
-    
-    std::cout << "Task 3: " << std::endl;
+    /*
+    std::cout << "Task 4: " << std::endl;
     double u = 0.03e8;
     SparseMatrix<double> I (AtA.rows(),AtA.cols());
     I.setIdentity();
@@ -64,7 +65,43 @@ int main(int argc, char* argv[]) {
     eigenValues = saeigensolver_u.eigenvalues();
     std::cout << "The two largest eigenvalues of AtA-u are: " << std::endl << eigenValues.tail(2) << std::endl;
     std::cout << "Ratio between first and second: " << eigenValues.tail(2)[0] / eigenValues.tail(2)[1] << std::endl;
+    */
     
+    // Task 5
+    // compute Eigen SVD
+    std::cout << "Task 5: " << std::endl;
+
+    Eigen::BDCSVD<Eigen::MatrixXd> svd (A, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    VectorXd W = svd.singularValues();
+    std::cout << "singular values: " << W << "\n";
+    MatrixXd sigma = svd.singularValues().asDiagonal();
+    std::cout << "norm of Sigma: " << sigma.norm() << std::endl;
+
+    // Task 6
+    std::cout << "Task 6: " << std::endl;
+
+    int k = 30;
+    int m = A.rows();
+    int n = A.cols();
+
+    MatrixXd C = MatrixXd(m, k);
+    C = svd.matrixU().topLeftCorner(m, k);
+
+    MatrixXd D = MatrixXd(n, k);
+    //nk =  nk * kk = nk
+    D = svd.matrixV().topLeftCorner(n, k) * sigma.topLeftCorner(k,k);
+
+    std::cout << "nonzeros of C: " << C.nonZeros() << std::endl;
+    std::cout << "nonzeros of D: " << D.nonZeros() << std::endl;
+
+    // Task7
+    std::cout << "Task 7: " << std::endl;
+    MatrixXd compressed = C * D.transpose();
+    compressed = compressed.cwiseMax(0.0).cwiseMin(255.0);
+    result = greyMatrix2File(compressed, "resources/compressed.png");
+    if (result == 1){
+        return 1;
+    }
 
     return 0;
 }
